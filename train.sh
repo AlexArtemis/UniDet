@@ -1,0 +1,1 @@
+python projects/UniDet/train_net.py --config-file projects/UniDet/configs/Partitioned_COI_R50_2x.yaml --num-gpus=3

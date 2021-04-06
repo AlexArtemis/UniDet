@@ -1,9 +1,9 @@
 _BASE_: "Base-CRCNN-COCO.yaml"
 MODEL:
-  META_ARCHITECTURE: "UnifiedRCNN"
+  META_ARCHITECTURE: "SplitClassifierRCNN"
   ROI_HEADS:
-    NUM_CLASSES: 659
-    NAME: "UnifiedCascadeROIHeads"
+    NUM_CLASSES: -1
+    NAME: "MultiDatasetCascadeROIHeads"
   ROI_BOX_HEAD:
     USE_SIGMOID_CE: True
     # USE_EQL_LOSS: True
@@ -21,10 +21,9 @@ MULTI_DATASET:
   NUM_CLASSES: [80, 365, 500]
   DATA_RATIO: [1, 1, 1]
   USE_CAS: [False, True, True]
-  UNIFIED_LABEL_FILE: 'datasets/label_spaces/manual.json'
 SOLVER:
   IMS_PER_BATCH: 16
-  BASE_LR: 0.001
-  STEPS: (120000,160000)
+  STEPS: (120000, 160000)
   MAX_ITER: 180000
   CHECKPOINT_PERIOD: 120000
+

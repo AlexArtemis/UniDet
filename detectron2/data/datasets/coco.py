@@ -77,6 +77,8 @@ def load_coco_json(json_file, image_root, dataset_name=None, extra_annotation_ke
         cats = coco_api.loadCats(cat_ids)
         # The categories in a custom json file may not be sorted.
         thing_classes = [c["name"] for c in sorted(cats, key=lambda x: x["id"])]
+        print('thing_class: ', thing_classes)
+        print('meta.thing_classes', meta.thing_classes)
         meta.thing_classes = thing_classes
 
         # In COCO, certain category ids are artificially removed,

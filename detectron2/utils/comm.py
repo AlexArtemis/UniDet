@@ -258,6 +258,6 @@ def reduce_dict(input_dict, average=True):
         if dist.get_rank() == 0 and average:
             # only main process gets accumulated, so only divide by
             # world_size in this case
-            values /= world_size
+            values = torch.div(values, world_size)
         reduced_dict = {k: v for k, v in zip(names, values)}
     return reduced_dict
