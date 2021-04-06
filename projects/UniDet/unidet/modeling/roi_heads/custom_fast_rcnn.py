@@ -20,19 +20,19 @@ __all__ = ["CustomFastRCNNOutputLayers", "CustomFastRCNNOutputs"]
 
 class CustomFastRCNNOutputs(FastRCNNOutputs):
     def __init__(
-        self,
-        cfg,
-        box2box_transform,
-        pred_class_logits,
-        pred_proposal_deltas,
-        proposals,
-        smooth_l1_beta=0.0,
-        box_reg_loss_type="smooth_l1",
-        freq_weight=None,
-        hierarchy_weight=None
+            self,
+            cfg,
+            box2box_transform,
+            pred_class_logits,
+            pred_proposal_deltas,
+            proposals,
+            smooth_l1_beta=0.0,
+            box_reg_loss_type="smooth_l1",
+            freq_weight=None,
+            hierarchy_weight=None
     ):
-        super().__init__(box2box_transform, pred_class_logits, 
-            pred_proposal_deltas, proposals, smooth_l1_beta, box_reg_loss_type)
+        super().__init__(box2box_transform, pred_class_logits,
+                         pred_proposal_deltas, proposals, smooth_l1_beta, box_reg_loss_type)
         self._no_instances = (self.pred_class_logits.numel() == 0) or (len(proposals) == 0)
         if self._no_instances:
             print('No instances!', pred_class_logits.shape, pred_proposal_deltas.shape, len(proposals))
@@ -45,33 +45,33 @@ class CustomFastRCNNOutputs(FastRCNNOutputs):
         self.pos_parents = cfg.MODEL.ROI_BOX_HEAD.HIERARCHY_POS_PARENTS
         self.hierarchy_ignore = cfg.MODEL.ROI_BOX_HEAD.HIERARCHY_IGNORE
         if self.pos_parents and (hierarchy_weight is not None):
-            self.hierarchy_weight = hierarchy_weight[0] # (C + 1) x C
+            self.hierarchy_weight = hierarchy_weight[0]  # (C + 1) x C
             self.is_parents = hierarchy_weight[1]
         else:
-            self.hierarchy_weight = hierarchy_weight # (C + 1) x C
+            self.hierarchy_weight = hierarchy_weight  # (C + 1) x C
         self.freq_weight = freq_weight
 
     def sigmoid_cross_entropy_loss(self):
         if self._no_instances:
             return self.pred_class_logits.sum() * 0.
-        self._log_accuracy()
+        # self._log_accuracy()
 
         B = self.pred_class_logits.shape[0]
         C = self.pred_class_logits.shape[1] - 1
 
         target = self.pred_class_logits.new_zeros(B, C + 1)
-        target[range(len(self.gt_classes)), self.gt_classes] = 1 # B x (C + 1)
-        target = target[:, :C] # B x C
+        target[range(len(self.gt_classes)), self.gt_classes] = 1  # B x (C + 1)
+        target = target[:, :C]  # B x C
 
         weight = 1
-        if (self.freq_weight is not None) and self.use_eql_loss: # eql loss
+        if (self.freq_weight is not None) and self.use_eql_loss:  # eql loss
             exclude_weight = (self.gt_classes != C).float().view(B, 1).expand(B, C)
             threshold_weight = self.freq_weight.view(1, C).expand(B, C)
-            eql_w = 1 - exclude_weight * threshold_weight * (1 - target) # B x C
+            eql_w = 1 - exclude_weight * threshold_weight * (1 - target)  # B x C
             weight = weight * eql_w
 
-        if (self.freq_weight is not None) and self.use_fed_loss: # fedloss
-            appeared = torch.unique(self.gt_classes) # C'
+        if (self.freq_weight is not None) and self.use_fed_loss:  # fedloss
+            appeared = torch.unique(self.gt_classes)  # C'
             prob = appeared.new_ones(C + 1).float()
             if len(appeared) < self.fed_loss_num_cat:
                 if self.fed_loss_freq_weight > 0:
@@ -84,19 +84,19 @@ class CustomFastRCNNOutputs(FastRCNNOutputs):
                     replacement=False)
                 appeared = torch.cat([appeared, more_appeared])
             appeared_mask = appeared.new_zeros(C + 1)
-            appeared_mask[appeared] = 1 # C + 1
+            appeared_mask[appeared] = 1  # C + 1
             appeared_mask = appeared_mask[:C]
             fed_w = appeared_mask.view(1, C).expand(B, C)
             weight = weight * fed_w
 
         if (self.hierarchy_weight is not None) and self.hierarchy_ignore:
             if self.pos_parents:
-                target = torch.mm(target, self.is_parents) + target # B x C
-            hierarchy_w = self.hierarchy_weight[self.gt_classes] # B x C
+                target = torch.mm(target, self.is_parents) + target  # B x C
+            hierarchy_w = self.hierarchy_weight[self.gt_classes]  # B x C
             weight = weight * hierarchy_w
 
         cls_loss = F.binary_cross_entropy_with_logits(
-            self.pred_class_logits[:, :-1], target, reduction='none') # B x C
+            self.pred_class_logits[:, :-1], target, reduction='none')  # B x C
         return torch.sum(cls_loss * weight) / B
 
     def softmax_cross_entropy_loss(self):
@@ -106,9 +106,8 @@ class CustomFastRCNNOutputs(FastRCNNOutputs):
         if self._no_instances:
             return self.pred_class_logits.sum() * 0.
         else:
-            self._log_accuracy()
+            # self._log_accuracy()
             return F.cross_entropy(self.pred_class_logits, self.gt_classes, reduction="mean")
-
 
     def box_reg_loss(self):
         """
@@ -162,10 +161,10 @@ class CustomFastRCNNOutputs(FastRCNNOutputs):
         else:
             loss_cls = self.softmax_cross_entropy_loss()
         return {
-            "loss_cls": loss_cls, 
+            "loss_cls": loss_cls,
             "loss_box_reg": self.box_reg_loss()
         }
-        
+
     def predict_probs(self):
         """
         Deprecated
@@ -188,7 +187,7 @@ def _load_class_freq(cfg):
             [c['image_count'] for c in sorted(cat_info, key=lambda x: x['id'])],
             device=torch.device(cfg.MODEL.DEVICE))
         if cfg.MODEL.ROI_BOX_HEAD.USE_FED_LOSS and \
-            cfg.MODEL.ROI_BOX_HEAD.FED_LOSS_FREQ_WEIGHT > 0.:
+                cfg.MODEL.ROI_BOX_HEAD.FED_LOSS_FREQ_WEIGHT > 0.:
             freq_weight = \
                 cat_info.float() ** cfg.MODEL.ROI_BOX_HEAD.FED_LOSS_FREQ_WEIGHT
         else:
@@ -213,7 +212,7 @@ def _load_class_hierarchy(cfg):
         categories = hierarchy_data['categories']
         continousid = sorted([x['id'] for x in categories])
         catid2continous = {x['id']: continousid.index(x['id']) \
-            for x in categories}
+                           for x in categories}
         C = len(categories)
         is_parents = torch.zeros((C + 1, C), device=torch.device(cfg.MODEL.DEVICE)).float()
         is_chirlds = torch.zeros((C + 1, C), device=torch.device(cfg.MODEL.DEVICE)).float()
@@ -225,17 +224,17 @@ def _load_class_hierarchy(cfg):
         if cfg.MODEL.ROI_BOX_HEAD.HIERARCHY_POS_PARENTS:
             hierarchy_weight = (1 - is_chirlds, is_parents[:C])
         else:
-            hierarchy_weight = 1 - (is_parents + is_chirlds) # (C + 1) x C
+            hierarchy_weight = 1 - (is_parents + is_chirlds)  # (C + 1) x C
 
     return hierarchy_weight
 
 
 class CustomFastRCNNOutputLayers(FastRCNNOutputLayers):
     def __init__(
-        self, 
-        cfg, 
-        input_shape: ShapeSpec,
-        **kwargs
+            self,
+            cfg,
+            input_shape: ShapeSpec,
+            **kwargs
     ):
         super().__init__(cfg, input_shape, **kwargs)
         self.use_sigmoid_ce = cfg.MODEL.ROI_BOX_HEAD.USE_SIGMOID_CE
@@ -244,11 +243,10 @@ class CustomFastRCNNOutputLayers(FastRCNNOutputLayers):
             prior_prob = cfg.MODEL.ROI_BOX_HEAD.PRIOR_PROB
             bias_value = -math.log((1 - prior_prob) / prior_prob)
             nn.init.constant_(self.cls_score.bias, bias_value)
-        
+
         self.cfg = cfg
         self.freq_weight = _load_class_freq(cfg)
         self.hierarchy_weight = _load_class_hierarchy(cfg)
-
 
     def predict_probs(self, predictions, proposals):
         scores, _ = predictions
@@ -259,7 +257,6 @@ class CustomFastRCNNOutputLayers(FastRCNNOutputLayers):
             probs = F.softmax(scores, dim=-1)
 
         return probs.split(num_inst_per_image, dim=0)
-
 
     def losses(self, predictions, proposals, use_advanced_loss=True):
         """
@@ -281,9 +278,7 @@ class CustomFastRCNNOutputLayers(FastRCNNOutputLayers):
             proposals,
             self.smooth_l1_beta,
             self.box_reg_loss_type,
-            self.freq_weight if use_advanced_loss else None, 
+            self.freq_weight if use_advanced_loss else None,
             self.hierarchy_weight if use_advanced_loss else None,
         ).losses()
         return {k: v * self.loss_weight.get(k, 1.0) for k, v in losses.items()}
-
-
