@@ -28,7 +28,11 @@ class UnifiedVisualizationDemo(object):
         unified_label_file = json.load(open(cfg.MULTI_DATASET.UNIFIED_LABEL_FILE))
         self.metadata.thing_classes = [
             '{}'.format([xx for xx in x['name'].split('_') if xx != ''][0]) \
-                for x in unified_label_file['categories']]
+            for x in unified_label_file['categories']]
+
+        self.metadata.thing_classes = ['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck', 'face']
+        print(self.metadata.thing_classes)
+
         self.cpu_device = torch.device("cpu")
         self.instance_mode = instance_mode
 

@@ -83,6 +83,8 @@ if __name__ == "__main__":
 
     demo = UnifiedVisualizationDemo(cfg)
 
+    print(args.output)
+
     if args.input:
         if len(args.input) == 1:
             args.input = glob.glob(os.path.expanduser(args.input[0]))
