@@ -12,7 +12,7 @@ of support or stability as detectron2.
 + [Scale-Aware Trident Networks for Object Detection](TridentNet)
 + [TensorMask: A Foundation for Dense Object Segmentation](TensorMask)
 + [Mesh R-CNN](https://github.com/facebookresearch/meshrcnn)
-+ [PointRend: Image Segmentation as Rendering](PointRend)
++ [PointRend: Image Segmentation as Rendering](../detectron2/projects/PointRend)
 + [Momentum Contrast for Unsupervised Visual Representation Learning](https://github.com/facebookresearch/moco/tree/master/detection)
 + [DETR: End-to-End Object Detection with Transformers](https://github.com/facebookresearch/detr/tree/master/d2)
 + [Panoptic-DeepLab: A Simple, Strong, and Fast Baseline for Bottom-Up Panoptic Segmentation](Panoptic-DeepLab)

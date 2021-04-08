@@ -277,7 +277,7 @@ There are other configs you might want to change to train or evaluate on new dat
 
 New models
 (e.g. [TensorMask](../../projects/TensorMask),
-[PointRend](../../projects/PointRend))
+[PointRend](../../detectron2/projects/PointRend))
 often have similar configs of their own that need to be changed as well.
 
 ```eval_rst

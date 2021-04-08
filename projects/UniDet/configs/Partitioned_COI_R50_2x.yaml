@@ -17,10 +17,10 @@ DATALOADER:
   NUM_WORKERS: 1
 MULTI_DATASET:
   ENABLED: True
-  DATASETS: ['test', 'widerface']
-  NUM_CLASSES: [6, 1]
-  DATA_RATIO: [1, 1]
-  USE_CAS: [False, False]
+  DATASETS: ['test', 'widerface',]
+  NUM_CLASSES: [6, 1,]
+  DATA_RATIO: [1, 1,]
+  USE_CAS: [False, False,]
 SOLVER:
   IMS_PER_BATCH: 64
   STEPS: (120000, 160000)

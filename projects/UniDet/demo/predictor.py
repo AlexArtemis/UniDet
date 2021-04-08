@@ -25,10 +25,11 @@ class UnifiedVisualizationDemo(object):
                 Useful since the visualization logic can be slow.
         """
         self.metadata = MetadataCatalog.get("__unused")
-        unified_label_file = json.load(open(cfg.MULTI_DATASET.UNIFIED_LABEL_FILE))
-        self.metadata.thing_classes = [
-            '{}'.format([xx for xx in x['name'].split('_') if xx != ''][0]) \
-            for x in unified_label_file['categories']]
+
+        # unified_label_file = json.load(open(cfg.MULTI_DATASET.UNIFIED_LABEL_FILE))
+        # self.metadata.thing_classes = [
+        #     '{}'.format([xx for xx in x['name'].split('_') if xx != ''][0]) \
+        #     for x in unified_label_file['categories']]
 
         self.metadata.thing_classes = ['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck', 'face']
         print(self.metadata.thing_classes)

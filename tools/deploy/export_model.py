@@ -4,6 +4,7 @@ import argparse
 import os
 import onnx
 import torch
+from detectron2.data.datasets import load_coco_json
 from torch import Tensor
 
 from detectron2.checkpoint import DetectionCheckpointer
@@ -14,11 +15,48 @@ from detectron2.export import Caffe2Tracer, TracingAdapter, add_export_config
 from detectron2.export.torchscript import dump_torchscript_IR, export_torchscript_with_instances
 from detectron2.modeling import GeneralizedRCNN, RetinaNet, build_model
 from detectron2.modeling.postprocessing import detector_postprocess
-from detectron2.projects.point_rend import add_pointrend_config
+from detectron2.projects.PointRend.point_rend import add_pointrend_config
 from detectron2.structures import Boxes
 from detectron2.utils.env import TORCH_VERSION
 from detectron2.utils.file_io import PathManager
 from detectron2.utils.logger import setup_logger
+from detectron2.data import (
+    MetadataCatalog,
+    build_detection_test_loader, DatasetCatalog,
+)
+
+from projects.UniDet.unidet.modeling.meta_arch import split_rcnn, unified_rcnn
+from projects.UniDet.unidet.config import add_unidet_config
+
+TRAIN_JSON = '/home/leizehua/workspace/data/detectron2/datasets/widerface/annotations/wider_face_train_annot_coco_style.json'
+TRAIN_PATH = '/home/leizehua/workspace/data/detectron2/datasets/widerface/WIDER_train/images/'
+VAL_JSON = '/home/leizehua/workspace/data/detectron2/datasets/widerface/annotations/wider_face_val_annot_coco_style.json'
+VAL_PATH = '/home/leizehua/workspace/data/detectron2/datasets/widerface/WIDER_val/images/'
+
+DatasetCatalog.register("widerface_train", lambda: load_coco_json(TRAIN_JSON, TRAIN_PATH, "widerface_train"))
+MetadataCatalog.get("widerface_train").set(thing_classes=["face"],
+                                           json_file=TRAIN_JSON,
+                                           image_root=TRAIN_PATH)
+
+DatasetCatalog.register("widerface_val", lambda: load_coco_json(VAL_JSON, VAL_PATH, "widerface_val"))
+MetadataCatalog.get("widerface_val").set(thing_classes=["face"],
+                                         json_file=VAL_JSON,
+                                         image_root=VAL_PATH)
+
+COCO_TRAIN_JSON = '/home/leizehua/workspace/data/detectron2/datasets/test/annotations/instances_train2021.json'
+COCO_TRAIN_PATH = '/home/leizehua/workspace/data/detectron2/datasets/test/train'
+COCO_VAL_JSON = '/home/leizehua/workspace/data/detectron2/datasets/test/annotations/instances_val2021.json'
+COCO_VAL_PATH = '/home/leizehua/workspace/data/detectron2/datasets/test/val'
+
+DatasetCatalog.register("test_train", lambda: load_coco_json(COCO_TRAIN_JSON, COCO_TRAIN_PATH, "test_train"))
+MetadataCatalog.get("test_train").set(thing_classes=['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck'],
+                                      json_file=COCO_TRAIN_JSON,
+                                      image_root=COCO_TRAIN_PATH)
+
+DatasetCatalog.register("test_val", lambda: load_coco_json(COCO_VAL_JSON, COCO_VAL_PATH, "test_val"))
+MetadataCatalog.get("test_val").set(thing_classes=['person', 'bicycle', 'car', 'motorcycle', 'bus', 'truck'],
+                                    json_file=COCO_VAL_JSON,
+                                    image_root=COCO_VAL_PATH)
 
 
 def setup_cfg(args):
@@ -26,7 +64,7 @@ def setup_cfg(args):
     # cuda context is initialized before creating dataloader, so we don't fork anymore
     cfg.DATALOADER.NUM_WORKERS = 0
     cfg = add_export_config(cfg)
-    add_pointrend_config(cfg)
+    add_unidet_config(cfg)
     cfg.merge_from_file(args.config_file)
     cfg.merge_from_list(args.opts)
     cfg.freeze()
